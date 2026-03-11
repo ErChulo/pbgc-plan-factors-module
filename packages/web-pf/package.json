@@ -1,0 +1,21 @@
+{
+  "name": "@pbgc/web-pf",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "node ../../scripts/sync-web-template.mjs",
+    "dev": "vite",
+    "prebuild": "node ../../scripts/sync-web-template.mjs",
+    "build": "vite build",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@pbgc/core-pf": "file:../core-pf"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "vitest": "^2.1.8"
+  }
+}

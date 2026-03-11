@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pbgc.local/schemas/planFactors.schema.json",
+  "title": "PlanFactorsInput",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["earlyRetirement", "lateRetirement", "benefitFormConversion", "normalSingleForm"],
+  "properties": {
+    "earlyRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ERF-1976", "ERF-1979", "ERF-Disability"],
+      "properties": {
+        "ERF-1976": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "linear_1_over_15_per_year" }
+          }
+        },
+        "ERF-1979": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "tiered_monthly_1_180_then_1_360" }
+          }
+        },
+        "ERF-Disability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "interest", "sex", "monthsCertain", "mortalityMale", "mortalityFemale", "calcMethod", "deferralMortality"],
+          "properties": {
+            "type": { "const": "actuarial" },
+            "interest": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+            "sex": { "enum": ["M", "F"] },
+            "monthsCertain": { "type": "integer", "minimum": 0, "maximum": 600 },
+            "mortalityMale": { "type": "string", "minLength": 1 },
+            "mortalityFemale": { "type": "string", "minLength": 1 },
+            "calcMethod": { "const": "MP" },
+            "deferralMortality": { "enum": ["Y", "N"] }
+          }
+        }
+      }
+    },
+    "lateRetirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["LRF-1978", "LRF-1982", "LRF-2011"],
+      "properties": {
+        "LRF-1978": { "$ref": "#/$defs/actuarialFactor" },
+        "LRF-1982": { "$ref": "#/$defs/actuarialFactor" },
+        "LRF-2011": { "$ref": "#/$defs/actuarialFactor" }
+      }
+    },
+    "benefitFormConversion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["BFCF-1976", "BFCF-1979", "BFCF-1997", "BFCF-2011", "BFCF-2019"],
+      "properties": {
+        "BFCF-1976": { "$ref": "#/$defs/bfcfFactor" },
+        "BFCF-1979": { "$ref": "#/$defs/bfcfFactor" },
+        "BFCF-1997": { "$ref": "#/$defs/bfcfFactor" },
+        "BFCF-2011": { "$ref": "#/$defs/bfcfFactor" },
+        "BFCF-2019": { "$ref": "#/$defs/bfcfFactor" }
+      }
+    },
+    "normalSingleForm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["1976", "1979", "1997", "2011", "2019"],
+      "properties": {
+        "1976": { "enum": ["SLA", "3CC"] },
+        "1979": { "enum": ["SLA", "3CC"] },
+        "1997": { "enum": ["SLA", "3CC"] },
+        "2011": { "enum": ["SLA", "3CC"] },
+        "2019": { "enum": ["SLA", "3CC"] }
+      }
+    }
+  },
+  "$defs": {
+    "actuarialFactor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interest", "sex", "monthsCertain", "mortalityMale", "mortalityFemale", "calcMethod", "deferralMortality"],
+      "properties": {
+        "interest": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "sex": { "enum": ["M", "F"] },
+        "monthsCertain": { "type": "integer", "minimum": 0, "maximum": 600 },
+        "mortalityMale": { "type": "string", "minLength": 1 },
+        "mortalityFemale": { "type": "string", "minLength": 1 },
+        "calcMethod": { "const": "MP" },
+        "deferralMortality": { "enum": ["Y", "N"] }
+      }
+    },
+    "bfcfFactor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fromFormAbbr", "fromMonthsCertain", "toFormAbbr", "toSurvivorPercent", "interest", "mortalityMale", "mortalityFemale", "annuityType", "method"],
+      "properties": {
+        "fromFormAbbr": { "enum": ["SLA", "3CC"] },
+        "fromMonthsCertain": { "type": "integer", "minimum": 0, "maximum": 600 },
+        "toFormAbbr": { "const": "JS50" },
+        "toSurvivorPercent": { "const": 0.5 },
+        "interest": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "mortalityMale": { "type": "string", "minLength": 1 },
+        "mortalityFemale": { "type": "string", "minLength": 1 },
+        "annuityType": { "const": "MP" },
+        "method": { "const": "N" }
+      }
+    }
+  }
+}

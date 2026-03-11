@@ -1,0 +1,19 @@
+{
+  "name": "@pbgc/cli-pf",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "pf-build": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "npm --workspace @pbgc/core-pf run build && tsc -p tsconfig.json",
+    "test": "echo cli ok"
+  },
+  "dependencies": {
+    "@pbgc/core-pf": "file:../core-pf"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.10"
+  }
+}

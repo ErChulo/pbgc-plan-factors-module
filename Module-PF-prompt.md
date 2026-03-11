@@ -1,4 +1,5 @@
 # Module PF Builder Prompt for SpecKit + Codex CLI (PF v0.7.13)
+[git repository](https://github.com/ErChulo/pbgc-plan-factors-module)
 
 You are Codex CLI working under SpecKit. Build a **Plan Factors (PF) workbook builder** module that generates an Excel workbook **identical in layout, formatting, print settings, merged cells, formulas, and sheet names** to the reference workbook:
 

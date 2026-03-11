@@ -1,0 +1,14 @@
+{
+  "name": "pbgc-plan-factors",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -ws",
+    "test": "npm run test -ws",
+    "test:core": "npm --workspace @pbgc/core-pf run test"
+  }
+}

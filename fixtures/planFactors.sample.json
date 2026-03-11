@@ -1,0 +1,109 @@
+{
+  "earlyRetirement": {
+    "ERF-1976": { "type": "linear_1_over_15_per_year" },
+    "ERF-1979": { "type": "tiered_monthly_1_180_then_1_360" },
+    "ERF-Disability": {
+      "type": "actuarial",
+      "interest": 0.08,
+      "sex": "M",
+      "monthsCertain": 36,
+      "mortalityMale": "UP84M2",
+      "mortalityFemale": "UP84M2",
+      "calcMethod": "MP",
+      "deferralMortality": "Y"
+    }
+  },
+  "lateRetirement": {
+    "LRF-1978": {
+      "interest": 0.05,
+      "sex": "M",
+      "monthsCertain": 0,
+      "mortalityMale": "GM83",
+      "mortalityFemale": "GF83",
+      "calcMethod": "MP",
+      "deferralMortality": "Y"
+    },
+    "LRF-1982": {
+      "interest": 0.05,
+      "sex": "M",
+      "monthsCertain": 36,
+      "mortalityMale": "UP84",
+      "mortalityFemale": "UP84M2",
+      "calcMethod": "MP",
+      "deferralMortality": "Y"
+    },
+    "LRF-2011": {
+      "interest": 0.08,
+      "sex": "M",
+      "monthsCertain": 36,
+      "mortalityMale": "UP84M2",
+      "mortalityFemale": "UP84M2",
+      "calcMethod": "MP",
+      "deferralMortality": "Y"
+    }
+  },
+  "benefitFormConversion": {
+    "BFCF-1976": {
+      "fromFormAbbr": "SLA",
+      "fromMonthsCertain": 0,
+      "toFormAbbr": "JS50",
+      "toSurvivorPercent": 0.5,
+      "interest": 0.05,
+      "mortalityMale": "GM83",
+      "mortalityFemale": "GM83",
+      "annuityType": "MP",
+      "method": "N"
+    },
+    "BFCF-1979": {
+      "fromFormAbbr": "SLA",
+      "fromMonthsCertain": 0,
+      "toFormAbbr": "JS50",
+      "toSurvivorPercent": 0.5,
+      "interest": 0.05,
+      "mortalityMale": "GM83",
+      "mortalityFemale": "GM83",
+      "annuityType": "MP",
+      "method": "N"
+    },
+    "BFCF-1997": {
+      "fromFormAbbr": "3CC",
+      "fromMonthsCertain": 36,
+      "toFormAbbr": "JS50",
+      "toSurvivorPercent": 0.5,
+      "interest": 0.08,
+      "mortalityMale": "UP84",
+      "mortalityFemale": "UP84",
+      "annuityType": "MP",
+      "method": "N"
+    },
+    "BFCF-2011": {
+      "fromFormAbbr": "3CC",
+      "fromMonthsCertain": 36,
+      "toFormAbbr": "JS50",
+      "toSurvivorPercent": 0.5,
+      "interest": 0.08,
+      "mortalityMale": "UP84M2",
+      "mortalityFemale": "UP84M2",
+      "annuityType": "MP",
+      "method": "N"
+    },
+    "BFCF-2019": {
+      "fromFormAbbr": "3CC",
+      "fromMonthsCertain": 36,
+      "toFormAbbr": "JS50",
+      "toSurvivorPercent": 0.5,
+      "interest": 0.08,
+      "mortalityMale": "UP84M2",
+      "mortalityFemale": "UP84M2",
+      "annuityType": "MP",
+      "method": "N"
+    }
+  },
+  "normalSingleForm": {
+    "1976": "SLA",
+    "1979": "SLA",
+    "1997": "3CC",
+    "2011": "3CC",
+    "2019": "3CC"
+  }
+}
