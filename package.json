@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm run build -ws",
     "test": "npm run test -ws",
-    "test:core": "npm --workspace @pbgc/core-pf run test"
+    "test:core": "npm --workspace @pbgc/core-pf run test",
+    "build:standalone": "node scripts/build-standalone-html.mjs"
   }
 }
