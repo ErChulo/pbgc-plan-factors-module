@@ -10,15 +10,6 @@ import { PF_SHEET_ORDER, buildPfWorkbook } from "../src/index.js";
 const TEMPLATE_PATH = "templates/PF_template.v0.7.13.xlsx";
 const EXPECTED_PATH = "fixtures/expected.24884900PF.v0.7.13.xlsx";
 
-const ERF_LRF = new Set(["ERF-1976", "ERF-1979", "ERF-Disability", "LRF-1978", "LRF-1982", "LRF-2011"]);
-const BFCF = new Set([
-  "BFCF-1976 SLA->JS50",
-  "BFCF-1979 SLA->JS50",
-  "BFCF-1997 3CC->JS50",
-  "BFCF-2011 3CC->JS50",
-  "BFCF-2019 3CC->JS50"
-]);
-
 async function exists(path: string): Promise<boolean> {
   try {
     await access(path, constants.F_OK);
@@ -51,19 +42,12 @@ function parseSheetMap(workbookXml: string, relsMap: Record<string, string>): Re
   return map;
 }
 
-function find(xml: string, re: RegExp): string | null {
-  const match = re.exec(xml);
-  return match?.[1] ?? null;
-}
-
 describe("workbook generation", () => {
   it("matches golden workbook hash when fixtures are present", async () => {
     const hasTemplate = await exists(TEMPLATE_PATH);
     const hasGolden = await exists(EXPECTED_PATH);
 
-    if (!hasTemplate || !hasGolden) {
-      return;
-    }
+    if (!hasTemplate || !hasGolden) return;
 
     const [template, expected] = await Promise.all([readFile(TEMPLATE_PATH), readFile(EXPECTED_PATH)]);
 
@@ -78,11 +62,9 @@ describe("workbook generation", () => {
     expect(generatedHash).toBe(expectedHash);
   });
 
-  it("keeps required sheet order", async () => {
+  it("keeps required sheet order and workbook defined names", async () => {
     const hasTemplate = await exists(TEMPLATE_PATH);
-    if (!hasTemplate) {
-      return;
-    }
+    if (!hasTemplate) return;
 
     const template = await readFile(TEMPLATE_PATH);
     const built = await buildPfWorkbook({
@@ -97,13 +79,16 @@ describe("workbook generation", () => {
 
     const sheetOrder = parseSheetNames(workbookXml ?? "");
     expect(sheetOrder).toEqual([...PF_SHEET_ORDER]);
+
+    expect((workbookXml ?? "").includes("_xlnm.Print_Area")).toBe(true);
+    expect((workbookXml ?? "").includes("_xlnm.Print_Titles")).toBe(true);
+    expect((workbookXml ?? "").includes("'ERF-1976'!$A$1:$J$34")).toBe(true);
+    expect((workbookXml ?? "").includes("'BFCF-1976 SLA-&gt;JS50'!$A$1:$AB$111")).toBe(true);
   });
 
-  it("preserves print settings and freeze panes", async () => {
+  it("preserves freeze panes and page setup", async () => {
     const hasTemplate = await exists(TEMPLATE_PATH);
-    if (!hasTemplate) {
-      return;
-    }
+    if (!hasTemplate) return;
 
     const template = await readFile(TEMPLATE_PATH);
     const built = await buildPfWorkbook({
@@ -115,66 +100,86 @@ describe("workbook generation", () => {
     const zip = await JSZip.loadAsync(built.bytes);
     const workbookXml = await zip.file("xl/workbook.xml")?.async("string");
     const relsXml = await zip.file("xl/_rels/workbook.xml.rels")?.async("string");
-    expect(workbookXml).toBeTruthy();
-    expect(relsXml).toBeTruthy();
-
     const relsMap = parseRelationships(relsXml ?? "");
     const sheetMap = parseSheetMap(workbookXml ?? "", relsMap);
 
     for (const sheetName of PF_SHEET_ORDER) {
-      const xml = await zip.file(sheetMap[sheetName])?.async("string");
-      expect(xml).toBeTruthy();
-
-      const pane = find(xml ?? "", /<pane[^>]*topLeftCell="([^"]+)"/);
-      const printArea = find(xml ?? "", /<definedName[^>]*_xlnm\.Print_Area[^>]*>([^<]+)</);
-      const printTitles = find(xml ?? "", /<definedName[^>]*_xlnm\.Print_Titles[^>]*>([^<]+)</);
-
-      if (ERF_LRF.has(sheetName)) {
-        expect(pane).toBe("A11");
+      const xml = (await zip.file(sheetMap[sheetName])?.async("string")) ?? "";
+      if (sheetName.startsWith("ERF") || sheetName.startsWith("LRF")) {
+        expect(xml.includes('topLeftCell="A11"')).toBe(true);
+      } else {
+        expect(xml.includes('topLeftCell="C11"')).toBe(true);
       }
-      if (BFCF.has(sheetName)) {
-        expect(pane).toBe("C11");
-      }
-
-      if (ERF_LRF.has(sheetName)) {
-        expect((xml ?? "").includes("A1:J34")).toBe(true);
-      }
-      if (BFCF.has(sheetName)) {
-        expect((xml ?? "").includes("A1:AB111")).toBe(true);
-      }
-
-      expect((xml ?? "").includes("<pageSetup")).toBe(true);
-      expect((xml ?? "").includes("orientation=\"landscape\"")).toBe(true);
-      expect((xml ?? "").includes("fitToWidth=\"1\"")).toBe(true);
-      expect((xml ?? "").includes("fitToHeight=\"2\"")).toBe(true);
-      expect((xml ?? "").includes("<pageMargins")).toBe(true);
-      expect((xml ?? "").includes("left=\"0.4\"")).toBe(true);
-
-      expect(printArea).not.toBeNull();
-      expect(printTitles).not.toBeNull();
+      expect(xml.includes('orientation="landscape"')).toBe(true);
+      expect(xml.includes('fitToWidth="1"')).toBe(true);
+      expect(xml.includes('fitToHeight="2"')).toBe(true);
+      expect(xml.includes('left="0.4"')).toBe(true);
     }
   });
 
-  it("writes representative formulas", async () => {
+  it("updates exact header cells and formulas for changed inputs", async () => {
     const hasTemplate = await exists(TEMPLATE_PATH);
-    if (!hasTemplate) {
-      return;
-    }
+    if (!hasTemplate) return;
 
     const template = await readFile(TEMPLATE_PATH);
+    const caseInput = {
+      ...caseSample,
+      caseNumber: "99999999",
+      planName: "Sample Custom Plan",
+      dateOfPlanTermination: "2025-12-31",
+      normalRetirementAge: 67
+    };
+    const planInput = {
+      ...planSample,
+      earlyRetirement: {
+        ...planSample.earlyRetirement,
+        "ERF-Disability": {
+          ...planSample.earlyRetirement["ERF-Disability"],
+          interest: 0.07,
+          monthsCertain: 24,
+          mortalityMale: "UP84",
+          mortalityFemale: "UP84",
+          deferralMortality: "N"
+        }
+      },
+      benefitFormConversion: {
+        ...planSample.benefitFormConversion,
+        "BFCF-1997": {
+          ...planSample.benefitFormConversion["BFCF-1997"],
+          fromFormAbbr: "3CC",
+          fromMonthsCertain: 36,
+          interest: 0.09
+        }
+      }
+    };
+
     const built = await buildPfWorkbook({
-      caseInput: caseSample,
-      planFactorsInput: planSample,
+      caseInput,
+      planFactorsInput: planInput,
       templateBytes: new Uint8Array(template)
     });
 
     const zip = await JSZip.loadAsync(built.bytes);
-    const allSheets = Object.keys(zip.files).filter((name) => name.startsWith("xl/worksheets/sheet") && name.endsWith(".xml"));
-    const joinedXml = (await Promise.all(allSheets.map(async (p) => zip.file(p)?.async("string") ?? ""))).join("\n");
+    const workbookXml = await zip.file("xl/workbook.xml")?.async("string");
+    const relsXml = await zip.file("xl/_rels/workbook.xml.rels")?.async("string");
+    const relsMap = parseRelationships(relsXml ?? "");
+    const sheetMap = parseSheetMap(workbookXml ?? "", relsMap);
 
-    expect(joinedXml.includes("ROUND(")).toBe(true);
-    expect(joinedXml.includes("LRFAEQ(")).toBe(true);
-    expect(joinedXml.includes("BFCFAEQ(")).toBe(true);
-    expect(joinedXml.includes("ERFAEQ(")).toBe(true);
+    const erf1976 = (await zip.file(sheetMap["ERF-1976"])?.async("string")) ?? "";
+    expect(erf1976.includes("Sample Custom Plan")).toBe(true);
+    expect(erf1976.includes("Case Number: 99999999")).toBe(true);
+    expect(erf1976.includes("DOPT: 12/31/2025")).toBe(true);
+    expect(erf1976.includes("NRA of 67")).toBe(true);
+
+    const disability = (await zip.file(sheetMap["ERF-Disability"])?.async("string")) ?? "";
+    expect(disability.includes("interest=7%")).toBe(true);
+    expect(disability.includes("months certain=24")).toBe(true);
+    expect(disability.includes("deferral mortality=N")).toBe(true);
+    expect(disability.includes("ERFAEQ(0.07")).toBe(true);
+
+    const bfcf1997 = (await zip.file(sheetMap["BFCF-1997 3CC->JS50"])?.async("string")) ?? "";
+    expect(bfcf1997.includes("Form Conversion Factors: 3CC->JS50 (1997 Plan)")).toBe(true);
+    expect(bfcf1997.includes("interest=9.00%")).toBe(true);
+    expect(bfcf1997.includes('BFCFAEQ("3CC",0,36,0')).toBe(true);
   });
 });
